@@ -12,6 +12,19 @@ The default route uses your existing Codex ChatGPT login and pins `gpt-5.6-luna`
 
 A request contains one to four approved image paths and a focused question. The gateway makes a private copy of each image, asks Luna for a structured answer, checks the model identity and response schema, and returns only the evidence the host needs.
 
+## A small same-machine comparison
+
+Six synthetic image tasks were run through native Codex image attachment and the gateway with the same questions.
+
+| Result | Native Codex attachment | Visual Evidence Gateway |
+|---|---:|---:|
+| Tasks completed | 6/6 | 6/6 |
+| All expected fields present | 4/6 | 6/6 |
+| Median returned text | 602 characters | 62 characters |
+| Median end-to-end time | 16.6 s | 20.2 s |
+
+The gateway was slower. It returned roughly one tenth as much text and kept every expected field in this fixture set. The comparison only covers six synthetic cases on one machine, so it is not a general vision leaderboard. The test notes and limits are recorded in [`FINAL_RELEASE_DECISION.md`](FINAL_RELEASE_DECISION.md).
+
 This is a community project, not an official OpenAI product. Luna access depends on the account, region, workspace, and client version.
 
 [Architecture](docs/ARCHITECTURE.md) · [Security model](docs/SECURITY_MODEL.md) · [Releases](https://github.com/scy7796/visual-evidence-gateway/releases)
