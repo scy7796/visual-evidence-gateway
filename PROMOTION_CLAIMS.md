@@ -1,49 +1,31 @@
-# Public claims and launch guidance
+# What the validation supports
 
-Use only claims supported by the 2026-08-06 validation run.
+Public descriptions should stay within the evidence collected on 2026-08-06.
 
-## Safe claims
+## Supported statements
 
-- Visual Evidence Gateway lets text-first agents call a read-only `vision.inspect` MCP tool while keeping the main planning and coding task in DeepSeek, OpenCode, Pi, or another host agent.
-- The default backend uses the local Codex CLI with explicit `gpt-5.6-luna` and ChatGPT authentication.
-- The default route removes API-billing and alternate-provider environment variables from the child process and fails instead of silently switching models or billing paths.
-- The gateway authorizes image paths, rejects links and reparse points, stages bounded private copies, validates backend output, and returns compact image-indexed evidence.
-- Cache hits repeat path and file-stability checks but make zero backend calls for identical requests.
-- The installers verify SHA-256, roll back on setup failure, register the MCP server by absolute path, and can run a real image probe.
-- On the tested six synthetic fixtures, both native Codex attachment and the gateway completed 6/6 tasks. Exact expected-token coverage was 4/6 native and 6/6 gateway; the gateway was slower but returned much shorter output.
+Visual Evidence Gateway lets a text agent call a read-only `vision.inspect` MCP tool while the main planning and coding task stays in DeepSeek, OpenCode, Pi, or another host agent.
 
-Always attach the boundary to the benchmark: it is a small synthetic fixture set on one machine, not a general leaderboard.
+The default backend uses the local Codex CLI with explicit `gpt-5.6-luna` and ChatGPT authentication. ChatGPT-mode child processes do not inherit API-billing or alternate-provider variables. The request fails if the configured Luna route is unavailable.
 
-## Claims to avoid
+The gateway authorizes image paths, rejects links and reparse points, stages bounded private copies, validates backend output, and returns compact image-indexed evidence. A cache hit repeats path and file-stability checks but makes no backend call for an identical request.
 
-Do not claim that the project is:
+The installers check SHA-256, roll back the binary when setup fails, register the MCP server by absolute path, and can run a real image probe.
 
-- the first or only way to add vision to text models;
-- universally more accurate than Codex native vision, ModLens, or other visual MCP tools;
-- faster in every scenario;
-- free or unlimited;
-- completely sandboxed or risk-free;
-- guaranteed to use subscription quota for every account;
-- already verified through Codex Desktop as the host.
+On the six synthetic fixtures used in the same-machine comparison, both native Codex attachment and the gateway completed 6/6 tasks. Expected fields were fully present in 4/6 native results and 6/6 gateway results. The gateway was slower and returned less text.
 
-The live host-level boundary is important: protocol interoperability passed through the official MCP SDK client, while Codex Desktop still needs a manual post-restart test.
+Whenever these numbers appear in public material, include the sample boundary. Six synthetic fixtures on one machine are not a general benchmark.
 
-## Recommended positioning
+## Statements the evidence does not support
 
-Use this description:
+Do not describe the project as the first or only visual bridge. Do not claim that it is generally more accurate or faster than native vision, ModLens, or other MCP servers. Do not promise fixed latency, a specific token reduction, unlimited use, zero cost, complete sandboxing, or zero security risk.
 
-> Visual Evidence Gateway is a read-only MCP server for text-first agents. It sends focused image questions to Luna through the user's local Codex login, then returns compact, validated evidence instead of a full visual trace.
+Do not claim a completed Codex Desktop host test. The automated MCP check used the official MCP SDK client over stdio. Codex Desktop still needs a manual call after restart.
 
-A slightly more technical version:
+## Recommended description
 
-> Keep DeepSeek or OpenCode as the main agent and use Luna only for image evidence. The gateway adds local path controls, model pinning, crop/tile retries, structured output checks, prompt-injection screening, compact responses, and fail-closed routing.
+Use a plain description such as:
 
-## Launch sequence
+> Visual Evidence Gateway is a local, read-only MCP server for text agents. It calls Luna through the user's Codex ChatGPT login, limits which images can be read, checks the backend result, and returns a short set of task-specific visual evidence.
 
-1. Publish the repository and Release.
-2. Manually verify one real `vision.inspect` call from Codex Desktop after restart.
-3. Add that result, host version, and screenshot to the README.
-4. Make a small technical launch post in the communities where DeepSeek/OpenCode/Codex users already discuss tool integrations.
-5. Collect installation failures before making broader performance or accuracy claims.
-
-Do not lead with the synthetic 6/6 versus 4/6 comparison. Lead with the architecture and one-command installation; place benchmark data lower in the post with its limits.
+For a launch post, use [`docs/LAUNCH_POST.zh-CN.md`](docs/LAUNCH_POST.zh-CN.md). Add the actual host version and a successful call screenshot before publishing it.
