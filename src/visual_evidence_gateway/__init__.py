@@ -1,3 +1,3 @@
-"""Visual Evidence Gateway: a controlled vision-evidence MCP gateway."""
+"""Compatibility core for VisionSieve MCP."""
 
-__version__ = "0.5.0"
+__version__ = "1.0.0"
