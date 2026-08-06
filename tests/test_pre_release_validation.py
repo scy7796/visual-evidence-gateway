@@ -22,13 +22,16 @@ class PreReleaseValidationTest(unittest.TestCase):
         ):
             self.assertTrue((self.validation / name).is_file(), name)
 
-    def test_readme_separates_local_and_live_claims(self):
+    def test_readme_keeps_public_claims_bounded(self):
         text = (self.root / "README.md").read_text(encoding="utf-8")
-        self.assertIn("哪些卖点已经有证据", text)
-        self.assertIn("当前不能宣称", text)
-        self.assertIn("run_validation.py --runs 5 --host-mcp", text)
-        self.assertIn("缓存命中时后端调用数为 0", text)
-        self.assertNotIn("视觉准确率全面超过官方", text.split("当前不能宣称", 1)[0])
+        self.assertIn("## The comparison", text)
+        self.assertIn("about 90% less visual text", text)
+        self.assertIn("This is a small same-machine comparison", text)
+        self.assertIn("not a general accuracy or speed leaderboard", text)
+        self.assertIn("It does not silently switch models or move onto an API-billed route", text)
+        self.assertIn("comparison.md", text)
+        self.assertNotIn("most accurate vision MCP", text.casefold())
+        self.assertNotIn("90% fewer tokens", text.casefold())
 
     def test_validation_runner_generates_credential_free_config_and_fixtures(self):
         script = self.validation / "run_validation.py"
