@@ -1,20 +1,22 @@
 # Visual Evidence Gateway
 
-Visual Evidence Gateway is a local MCP server for agents that need to inspect images without handing the rest of the task to a multimodal model.
+Visual Evidence Gateway lets DeepSeek, OpenCode, Pi, and other text-first agents keep control of a task while Luna handles the screenshots.
 
-It exposes one tool:
+It runs locally as a read-only MCP server and exposes one tool:
 
 ```text
 vision.inspect(paths, query, mode="auto", rigor="normal")
 ```
 
-The default backend calls `gpt-5.6-luna` through the local Codex CLI and requires a ChatGPT login. The gateway does not store account credentials or API keys. If Luna is unavailable, the request fails instead of switching to another model or an API-billed route.
+The default route uses your existing Codex ChatGPT login and pins `gpt-5.6-luna`. The gateway does not keep an API key, and it will not switch to an API-billed route when Luna is unavailable.
 
-This is a community project, not an official OpenAI product. Model access depends on the account, region, workspace, and client version.
+A request contains one to four approved image paths and a focused question. The gateway makes a private copy of each image, asks Luna for a structured answer, checks the model identity and response schema, and returns only the evidence the host needs.
+
+This is a community project, not an official OpenAI product. Luna access depends on the account, region, workspace, and client version.
 
 [Architecture](docs/ARCHITECTURE.md) · [Security model](docs/SECURITY_MODEL.md) · [Releases](https://github.com/scy7796/visual-evidence-gateway/releases)
 
-## Install
+## Quick install
 
 Install the Codex CLI and sign in with ChatGPT:
 
@@ -35,11 +37,9 @@ macOS or Linux:
 curl -fsSL https://raw.githubusercontent.com/scy7796/visual-evidence-gateway/main/install.sh | sh
 ```
 
-The installer downloads the executable for the current platform, checks its SHA-256 hash, registers the MCP server with an absolute path, checks the Codex login, and runs an image probe.
+The installer downloads the executable for your platform, checks the published SHA-256 hash, registers the MCP server with an absolute path, checks the Codex login, and runs a small image request. The gateway itself does not need Python, pip, a virtual environment, or a separate Node runtime.
 
-The gateway itself does not need Python, pip, a virtual environment, or a Node runtime. The installer does not install Codex or change the current login method.
-
-To install without running the image probe:
+To install without making the image request:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/scy7796/visual-evidence-gateway/main/install.sh | sh -s -- --skip-probe
@@ -51,59 +51,59 @@ Windows:
 & ([scriptblock]::Create((irm https://raw.githubusercontent.com/scy7796/visual-evidence-gateway/main/install.ps1))) -SkipProbe
 ```
 
-After installation, restart the MCP host so it can discover the server.
+Restart the MCP host after setup so it can discover the server.
 
-To avoid piping a remote script into a shell, download the binary and checksum file from [Releases](https://github.com/scy7796/visual-evidence-gateway/releases), verify the hash, and run:
+You can also download the binary and checksum file from [Releases](https://github.com/scy7796/visual-evidence-gateway/releases), verify the hash yourself, and run:
 
 ```bash
 ./visual-evidence-gateway setup
 ```
 
-## When it fits
+## Where it helps
 
-Visual Evidence Gateway is useful when a text-first agent handles the main task and only needs image evidence at a few points. Typical inputs include terminal screenshots, interface states, charts, diagrams, and before-and-after comparisons.
+This project is meant for long tasks where a text-first agent does the planning and coding, but occasionally needs to read a terminal screenshot, inspect a UI state, understand a chart, follow a diagram, or compare two images.
 
-The host sends one to four approved image paths and a focused question. The gateway returns a short answer, image-indexed evidence, relevant text, and any uncertainty. Full OCR output and backend traces stay out of the main conversation by default.
+The host sends a specific question instead of its entire conversation. The reply contains a short answer, image-indexed evidence, relevant text, and any uncertainty. Full OCR output and backend traces stay out of the host conversation by default.
 
-Direct image attachment is simpler when Codex is already the main agent and a person only needs to inspect one or two images. OCR is usually better for clean text when layout and visual relationships do not matter. This project also does not provide mouse, keyboard, browser, video, or live screen control.
+If Codex is already the main agent and you only need to inspect one image, native image attachment is simpler. OCR is usually faster for clean text when layout and visual relationships do not matter. This server does not control a mouse, keyboard, browser, video stream, or live desktop.
 
-## How a request runs
+## What happens to an image
 
 ```text
 text-first agent
     |
     | vision.inspect
     v
-path checks and stable file read
+path authorization and stable file read
     v
-bounded image copy in a private request directory
+bounded copy in a private request directory
     v
 Codex CLI with gpt-5.6-luna
     v
-schema, model identity, and semantic checks
+model identity, schema, and semantic checks
     v
 optional crop or tile retry
     v
 compact evidence returned to the host
 ```
 
-The gateway reads only approved image files. It copies each image into a private request directory before calling the backend, which avoids giving the backend an arbitrary local path.
+The gateway reads only approved image files. It copies them into a private request directory before calling the backend, so the backend never receives an arbitrary path from the host.
 
-If the first result does not contain enough evidence, the router can retry with a crop or a set of tiles. The final response must match the result schema and refer only to images that were part of the request.
+If the first answer does not contain enough evidence, the router can retry with a crop or a set of tiles. The final response must match the result schema and can only refer to images that were included in the request.
 
 ## File and model controls
 
-The default configuration allows images from the current working directory. It rejects credential and configuration directories, symbolic links, Windows junctions and reparse points, UNC and verbatim paths, NTFS alternate data streams, unsupported files, and images outside the configured size and pixel limits.
+The current working directory is the default allow root. The gateway rejects credential and configuration directories, symbolic links, Windows junctions and reparse points, UNC and verbatim paths, NTFS alternate data streams, unsupported files, and images outside the configured size and pixel limits.
 
 The Codex child process runs read-only. Shell access, subagents, hooks, remote plugins, automatic dependency installation, and web search are disabled. ChatGPT mode removes API-key and alternate-endpoint variables from the child environment.
 
-Image text is treated as content to inspect, not as an instruction to the host. The gateway checks the backend result for execution claims and other signs that text inside the image affected the task.
+Text inside an image is treated as content to inspect. The gateway checks the backend response for execution claims and other signs that the image tried to redirect the task.
 
-These controls reduce the available attack surface, but they do not turn the process into a complete isolation boundary. Use a separate user account, container, or virtual machine for highly sensitive images.
+These controls narrow the available attack surface, but they are not a complete isolation boundary. Use a separate user account, container, or virtual machine for highly sensitive images.
 
 ## Cache behavior
 
-By default, the cache does not store raw backend responses, full OCR text, or local cache paths:
+The default cache keeps compact evidence. It does not keep raw backend responses, full OCR text, or local cache paths:
 
 ```yaml
 cache:
@@ -112,7 +112,7 @@ cache:
   expose_local_refs: false
 ```
 
-A cache hit still repeats path authorization, stable file reading, and image-byte checks. It avoids another backend call only when the image, question, and relevant settings are unchanged.
+A cache hit still repeats path authorization, stable file reading, and image-byte checks. It skips another backend call only when the image, question, and relevant settings are unchanged.
 
 ## Tool reference
 
@@ -127,11 +127,11 @@ vision.inspect(
 
 `paths` accepts one to four absolute image paths inside `allowed_roots`.
 
-`query` should contain the specific fact that must be confirmed from the image. Project history and unrelated task context should stay in the host conversation.
+`query` should ask for the fact that must be confirmed from the image. Keep project history and unrelated task context in the host conversation.
 
-`mode` selects the type of visual task. In `auto` mode, the router uses the number of images and the query to choose a path.
+`mode` selects the visual task. In `auto` mode, the router uses the image count and the query to choose a path.
 
-`normal` uses the primary backend and allows evidence-driven crop or tile retries. `critical` can use an independently configured verifier. `cheap` stays on the primary route unless the operator has explicitly configured another path.
+`normal` uses the primary backend and allows crop or tile retries when the evidence is weak. `critical` can use an independently configured verifier. `cheap` stays on the primary route unless the operator has configured another path.
 
 ## Default configuration
 
@@ -161,7 +161,7 @@ cache:
   expose_local_refs: false
 ```
 
-See [`examples/config.yaml`](examples/config.yaml) for a complete example. Remote endpoints, API keys, verifier models, and fallback models require explicit operator configuration.
+See [`examples/config.yaml`](examples/config.yaml) for a complete example. Remote endpoints, API keys, verifier models, and fallback models require explicit configuration.
 
 ## Commands
 
@@ -186,7 +186,7 @@ codex mcp add visual-evidence-gateway \
   -- visual-evidence-gateway serve
 ```
 
-Useful diagnostics:
+Diagnostics:
 
 ```bash
 visual-evidence-gateway healthcheck --check-connectivity --json
@@ -196,7 +196,7 @@ codex mcp list
 
 ## Known limits
 
-- Codex Desktop host discovery still depends on the installed client and may require a full restart.
+- Codex Desktop may need a full restart before it discovers the server.
 - Windows ARM64 does not have a prebuilt binary.
 - Release binaries are not code-signed. The installers rely on HTTPS and the published SHA-256 manifest.
 - Luna access and latency depend on the account and current service conditions.
@@ -232,20 +232,8 @@ python -m compileall -q src tests scripts
 python scripts/audit_release.py
 ```
 
-## Migration from the old name
-
-Version 0.5.0 renamed the project from `vision-bridge-mcp` to `visual-evidence-gateway` because the old name was already used by another project.
-
-Old installation directories and MCP registrations are not removed automatically. Remove the previous registration when it is no longer needed:
-
-```bash
-codex mcp remove vision-bridge
-```
-
-Environment variables beginning with `VISION_BRIDGE_` are no longer read. The current prefix is `VISUAL_EVIDENCE_GATEWAY_`.
-
 ## License
 
 MIT
 
-If the gateway solves a problem in your workflow, a Star helps other people find it.
+If this fits your workflow, a Star helps other people find it.
