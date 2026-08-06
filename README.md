@@ -17,7 +17,7 @@ The default route reuses your Codex ChatGPT login and pins `gpt-5.6-luna`. The g
 
 If Luna is unavailable, the call fails. It does not silently switch to another model or an API-billed route.
 
-## Six fixtures: 6/6 expected fields, 62-character median reply
+## Same task, about 1/10 the visual text in the host context
 
 The same six synthetic image tasks were sent through native Codex image attachment and Visual Evidence Gateway.
 
@@ -25,10 +25,10 @@ The same six synthetic image tasks were sent through native Codex image attachme
 |---|---:|---:|
 | Tasks completed | 6/6 | 6/6 |
 | All expected fields present | 4/6 | 6/6 |
-| Median returned text | 602 characters | 62 characters |
+| Median visual text returned to the host | 602 characters | 62 characters, about 1/10 |
 | Median end-to-end time | 16.6 s | 20.2 s |
 
-On these fixtures, the gateway returned about one tenth as much text without dropping an expected field. It was slower. This is a six-case same-machine comparison, not a general accuracy claim. The prompts, outputs, and limits are recorded in [`comparison.md`](pre_release_validation/results/comparison/comparison.md).
+In this run, the gateway took 3.6 seconds longer at the median and sent about 90% less visual text into the host context. It also kept every expected field in the six fixtures. These are same-machine results from a small synthetic set, not a general vision benchmark. The prompts, outputs, and limits are recorded in [`comparison.md`](pre_release_validation/results/comparison/comparison.md).
 
 ## Quick install
 
