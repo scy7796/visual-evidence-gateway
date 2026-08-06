@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.0 - 2026-08-06
+
+- Renamed the public product to **VisionSieve MCP**, emphasizing its high-signal, minimal-context visual handoff.
+- Changed the Python distribution to `visionsieve-mcp`, the primary CLI to `visionsieve`, the MCP registration to `visionsieve`, and the public configuration variable to `VISIONSIEVE_CONFIG`.
+- Added the `visionsieve_mcp` package as the v1 entry layer while retaining the hardened `visual_evidence_gateway` core and old console commands as compatibility aliases for 0.5 upgrades.
+- Added migration-aware setup that removes the old `visual-evidence-gateway` MCP registration, registers `visionsieve`, and accepts either the new or legacy configuration variable.
+- Renamed standalone binaries and the checksum manifest to `visionsieve-*`.
+- Extended the release workflow to publish five platform binaries, wheel, sdist, source ZIP, and SHA-256 manifest.
+- Reworked the README around the measured result: 62 versus 602 median returned characters, with 6/6 versus 4/6 expected-field coverage in the six-fixture same-machine comparison. The documentation explicitly distinguishes returned characters from token counts and records the 3.6-second median latency cost.
+
 ## 0.5.0 - 2026-08-06
 
 - Renamed the project to **Visual Evidence Gateway**: distribution `visual-evidence-gateway`, import package `visual_evidence_gateway`, CLI/MCP registration name `visual-evidence-gateway`, and `VISUAL_EVIDENCE_GATEWAY_*` environment variables. The previous `vision-bridge-mcp` name collided with an existing same-purpose project on GitHub and npm; a short migration note is included in the README and no second public brand is retained.
@@ -17,7 +27,6 @@
 - Replaced the Python/venv/pip bootstrap in end-user installers with release-binary downloads and SHA-256 verification.
 - Stopped auto-installing Codex from a third-party script path; users install the official CLI explicitly, while setup handles ChatGPT login and MCP registration.
 - Added cross-platform release-binary build automation.
-
 
 ## 0.4.0 - 2026-08-04
 
