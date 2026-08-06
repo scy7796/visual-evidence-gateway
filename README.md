@@ -14,7 +14,7 @@ vision.inspect(paths, query, mode="auto", rigor="normal")
 
 **这不是 OpenAI 官方项目，也不保证所有 ChatGPT 账号都拥有 Luna 权限。** 如果账号、地区、工作区或客户端版本没有暴露该模型，探针会明确失败，而不是静默改用 API 计费或其他模型。
 
-> **发布状态：Release Candidate。** 本地代码、构建和安全契约已验证；在真实 ChatGPT/Codex 账号上完成 `pre_release_validation` 的全部 P0 前，不应创建正式 GitHub Release 或宣传真实 Luna 延迟。
+> **发布状态：v0.5.0（已通过全部 P0 验收）。** 2026-08-06 在本机真实 ChatGPT 订阅账号上完成 `pre_release_validation` 全部 P0（5/5 真实 Luna 探针、六类图片、安全负例、缓存、Schema、宿主 MCP 调用），裁决见 [FINAL_RELEASE_DECISION.md](FINAL_RELEASE_DECISION.md)。真实延迟因账号、地区与服务负载而异；本机实测中位约 21–25 s/次。
 
 ## 名称迁移说明
 
