@@ -1,0 +1,24 @@
+{
+  "scope": "local orchestration only; excludes network and model inference",
+  "python": "3.13.5",
+  "platform": "Linux-6.12.13-x86_64-with-glibc2.41",
+  "cpu_count": 5,
+  "image": {
+    "width": 1920,
+    "height": 1080,
+    "bytes": 109361
+  },
+  "uncached": {
+    "iterations": 80,
+    "median_ms": 70.751,
+    "p95_ms": 74.475,
+    "max_ms": 81.251
+  },
+  "cache_hit": {
+    "iterations": 300,
+    "median_ms": 68.718,
+    "p95_ms": 72.429,
+    "max_ms": 86.182,
+    "backend_calls": 0
+  }
+}

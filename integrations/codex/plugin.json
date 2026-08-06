@@ -1,0 +1,10 @@
+{
+  "name": "visual-evidence-gateway",
+  "version": "0.5.0",
+  "description": "Secure, minimal-context local image inspection through one MCP tool.",
+  "mcpServers": {
+    "visual-evidence-gateway": {
+      "command": "visual-evidence-gateway-mcp"
+    }
+  }
+}

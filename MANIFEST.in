@@ -1,0 +1,25 @@
+include LICENSE
+include README.md
+include CHANGELOG.md
+include SECURITY.md
+include CONTRIBUTING.md
+include RELEASE_CHECKLIST.md
+include AUDIT_REPORT.md
+include TEST_REPORT.md
+include .env.example
+include install.sh
+include install.ps1
+recursive-include docs *.md *.json
+recursive-include examples *.yaml *.json
+recursive-include integrations *.md *.json
+recursive-include scripts *.py
+recursive-include tests *.py *.md
+recursive-include src/visual_evidence_gateway/prompts *.txt
+recursive-include src/visual_evidence_gateway/schemas *.json
+prune .github
+prune .venv
+prune build
+prune dist
+global-exclude __pycache__ *.py[cod]
+recursive-include pre_release_validation *.md *.py
+prune pre_release_validation/results

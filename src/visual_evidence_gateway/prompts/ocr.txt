@@ -1,0 +1,12 @@
+Mode: text
+Question: {question}
+Extract text exactly as it appears. Preserve line breaks.
+Report only image text that is relevant to the question.
+If a region is unreadable, say which region.
+
+Return:
+- answer
+- evidence
+- relevant_text
+- uncertainty
+- confidence

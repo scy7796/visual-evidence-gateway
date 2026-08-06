@@ -1,0 +1,14 @@
+Mode: chart
+Question: {question}
+Acceptance focus:
+- exact values shown in the chart
+- axis labels and units
+- legend and series identity
+- anomalies or outliers
+
+Return:
+- answer
+- evidence
+- relevant_text
+- uncertainty
+- confidence

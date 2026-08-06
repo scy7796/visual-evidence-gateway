@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "visual-evidence-gateway": {
+      "command": "uvx",
+      "args": ["--from", "visual-evidence-gateway", "visual-evidence-gateway-mcp"],
+      "env": {
+        "VISUAL_EVIDENCE_GATEWAY_CONFIG": "/absolute/path/to/config.yaml"
+      }
+    }
+  }
+}

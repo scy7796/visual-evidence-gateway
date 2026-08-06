@@ -1,0 +1,13 @@
+Mode: ui
+Question: {question}
+Acceptance focus:
+- visible error message
+- clipping or overlap
+- approximate location
+
+Return:
+- answer
+- evidence
+- relevant_text
+- uncertainty
+- confidence
