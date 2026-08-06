@@ -50,7 +50,12 @@ def inspect_wheel(path: Path, findings: list[str]) -> None:
             _check_name(name, findings)
             if not name.endswith("/"):
                 _check_text(name, archive.read(name), findings)
+
         required = {
+            "visionsieve_mcp/__init__.py",
+            "visionsieve_mcp/cli.py",
+            "visionsieve_mcp/setup_cli.py",
+            "visionsieve_mcp/server.py",
             "visual_evidence_gateway/server.py",
             "visual_evidence_gateway/setup_cli.py",
             "visual_evidence_gateway/router/config.py",
@@ -60,9 +65,14 @@ def inspect_wheel(path: Path, findings: list[str]) -> None:
         }
         missing = sorted(required - set(names))
         findings.extend(f"wheel missing: {name}" for name in missing)
+
         if not missing:
+            version_text = archive.read("visionsieve_mcp/__init__.py").decode("utf-8", errors="replace")
             config_text = archive.read("visual_evidence_gateway/router/config.py").decode("utf-8", errors="replace")
             cli_text = archive.read("visual_evidence_gateway/backends/codex_cli.py").decode("utf-8", errors="replace")
+            setup_text = archive.read("visionsieve_mcp/setup_cli.py").decode("utf-8", errors="replace")
+            if '__version__ = "1.0.0"' not in version_text:
+                findings.append("VisionSieve package version mismatch")
             for marker in (
                 '"via": "codex_cli"',
                 '"model": "gpt-5.6-luna"',
@@ -87,13 +97,21 @@ def inspect_wheel(path: Path, findings: list[str]) -> None:
             ):
                 if marker not in cli_text:
                     findings.append(f"wheel Codex hardening missing: {marker}")
+            for marker in (
+                'SERVER_NAME = "visionsieve"',
+                'CONFIG_ENV = "VISIONSIEVE_CONFIG"',
+                'OLD_SERVER_NAME = "visual-evidence-gateway"',
+            ):
+                if marker not in setup_text and marker not in archive.read("visionsieve_mcp/_compat.py").decode("utf-8", errors="replace"):
+                    findings.append(f"wheel VisionSieve migration contract missing: {marker}")
+
         metadata_names = [name for name in names if name.endswith(".dist-info/METADATA")]
         entry_names = [name for name in names if name.endswith(".dist-info/entry_points.txt")]
         if len(metadata_names) != 1:
             findings.append("wheel must contain exactly one METADATA file")
         else:
             metadata = archive.read(metadata_names[0]).decode("utf-8", errors="replace")
-            if "Name: visual-evidence-gateway" not in metadata or "Version: 0.5.0" not in metadata:
+            if "Name: visionsieve-mcp" not in metadata or "Version: 1.0.0" not in metadata:
                 findings.append("wheel metadata name/version mismatch")
             if not re.search(r"Requires-Dist: mcp(?:\s*)?\(<3,>=2\.0\)|Requires-Dist: mcp<3,>=2\.0", metadata):
                 findings.append("wheel metadata does not pin MCP SDK to >=2.0,<3")
@@ -101,7 +119,18 @@ def inspect_wheel(path: Path, findings: list[str]) -> None:
             findings.append("wheel must contain console entry points")
         else:
             entries = archive.read(entry_names[0]).decode("utf-8", errors="replace")
-            for command in ("visual-evidence-gateway", "visual-evidence-gateway-mcp", "visual-evidence-gateway-healthcheck", "visual-evidence-gateway-probe", "visual-evidence-gateway-setup"):
+            for command in (
+                "visionsieve",
+                "visionsieve-mcp",
+                "visionsieve-healthcheck",
+                "visionsieve-probe",
+                "visionsieve-setup",
+                "visual-evidence-gateway",
+                "visual-evidence-gateway-mcp",
+                "visual-evidence-gateway-healthcheck",
+                "visual-evidence-gateway-probe",
+                "visual-evidence-gateway-setup",
+            ):
                 if command not in entries:
                     findings.append(f"wheel entry point missing: {command}")
 
@@ -115,7 +144,20 @@ def inspect_sdist(path: Path, findings: list[str]) -> None:
             stream = archive.extractfile(member)
             if stream is not None:
                 _check_text(member.name, stream.read(), findings)
-        suffixes = ("/pyproject.toml", "/README.md", "/AUDIT_REPORT.md", "/install.sh", "/install.ps1", "/tests/test_security.py", "/tests/test_setup_cli.py", "/pre_release_validation/README.md", "/pre_release_validation/CODEX_TASK.md", "/pre_release_validation/run_validation.py")
+        suffixes = (
+            "/pyproject.toml",
+            "/README.md",
+            "/AUDIT_REPORT.md",
+            "/install.sh",
+            "/install.ps1",
+            "/src/visionsieve_mcp/cli.py",
+            "/src/visionsieve_mcp/setup_cli.py",
+            "/src/visual_evidence_gateway/router/config.py",
+            "/tests/test_security.py",
+            "/pre_release_validation/README.md",
+            "/pre_release_validation/CODEX_TASK.md",
+            "/pre_release_validation/run_validation.py",
+        )
         for suffix in suffixes:
             if not any(name.endswith(suffix) for name in names):
                 findings.append(f"sdist missing: *{suffix}")
