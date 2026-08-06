@@ -1,10 +1,10 @@
 #!/usr/bin/env sh
 set -eu
 
-REPO="${VISUAL_EVIDENCE_GATEWAY_REPO:-scy7796/visual-evidence-gateway}"
-VERSION="${VISUAL_EVIDENCE_GATEWAY_VERSION:-latest}"
-BIN_DIR="${VISUAL_EVIDENCE_GATEWAY_BIN_DIR:-$HOME/.local/bin}"
-INSTALL_PATH="$BIN_DIR/visual-evidence-gateway"
+REPO="${VISIONSIEVE_REPO:-${VISUAL_EVIDENCE_GATEWAY_REPO:-scy7796/visual-evidence-gateway}}"
+VERSION="${VISIONSIEVE_VERSION:-${VISUAL_EVIDENCE_GATEWAY_VERSION:-latest}}"
+BIN_DIR="${VISIONSIEVE_BIN_DIR:-${VISUAL_EVIDENCE_GATEWAY_BIN_DIR:-$HOME/.local/bin}}"
+INSTALL_PATH="$BIN_DIR/visionsieve"
 
 fail() {
   printf 'ERROR: %s\n' "$1" >&2
@@ -34,9 +34,10 @@ case "$(uname -m)" in
   *) fail "Unsupported CPU architecture: $(uname -m)" 2 ;;
 esac
 
-asset="visual-evidence-gateway-${os}-${arch}"
-if [ -n "${VISUAL_EVIDENCE_GATEWAY_RELEASE_BASE:-}" ]; then
-  base="${VISUAL_EVIDENCE_GATEWAY_RELEASE_BASE%/}"
+asset="visionsieve-${os}-${arch}"
+if [ -n "${VISIONSIEVE_RELEASE_BASE:-${VISUAL_EVIDENCE_GATEWAY_RELEASE_BASE:-}}" ]; then
+  base="${VISIONSIEVE_RELEASE_BASE:-${VISUAL_EVIDENCE_GATEWAY_RELEASE_BASE}}"
+  base="${base%/}"
 elif [ "$VERSION" = "latest" ]; then
   base="https://github.com/${REPO}/releases/latest/download"
 else
@@ -44,17 +45,15 @@ else
   base="https://github.com/${REPO}/releases/download/${tag}"
 fi
 
-tmp="$(mktemp -d 2>/dev/null || mktemp -d -t visual-evidence-gateway)"
+tmp="$(mktemp -d 2>/dev/null || mktemp -d -t visionsieve)"
 trap 'rm -rf "$tmp"' EXIT HUP INT TERM
 
 printf 'Downloading %s...\n' "$asset"
 curl -fL --retry 3 --connect-timeout 15 -o "$tmp/$asset" "$base/$asset" \
   || fail "No compatible release binary was found at $base/$asset" 3
 
-# A checksum protects against transfer corruption. Missing or malformed
-# checksum metadata is a hard failure, never a silent skip.
 if ! curl -fL --retry 2 --connect-timeout 15 -o "$tmp/SHA256SUMS.txt" \
-  "$base/visual-evidence-gateway-SHA256SUMS.txt" >/dev/null 2>&1; then
+  "$base/visionsieve-SHA256SUMS.txt" >/dev/null 2>&1; then
   fail "SHA-256 checksum file could not be downloaded; refusing to install an unverified binary" 4
 fi
 expected="$(awk -v name="$asset" '$2 == name || $2 == "*" name {print $1; exit}' "$tmp/SHA256SUMS.txt")"
@@ -86,5 +85,5 @@ fi
 
 case ":$PATH:" in
   *":$BIN_DIR:"*) : ;;
-  *) printf '\nTip: add %s to PATH to run `visual-evidence-gateway` directly.\n' "$BIN_DIR" ;;
+  *) printf '\nTip: add %s to PATH to run `visionsieve` directly.\n' "$BIN_DIR" ;;
 esac
