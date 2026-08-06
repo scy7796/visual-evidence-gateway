@@ -4,7 +4,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$Repo = if ($env:VISIONSIEVE_REPO) { $env:VISIONSIEVE_REPO } elseif ($env:VISUAL_EVIDENCE_GATEWAY_REPO) { $env:VISUAL_EVIDENCE_GATEWAY_REPO } else { "scy7796/visual-evidence-gateway" }
+$Repo = if ($env:VISIONSIEVE_REPO) { $env:VISIONSIEVE_REPO } elseif ($env:VISUAL_EVIDENCE_GATEWAY_REPO) { $env:VISUAL_EVIDENCE_GATEWAY_REPO } else { "scy7796/visionsieve-mcp" }
 $BinDir = if ($env:VISIONSIEVE_BIN_DIR) {
     $env:VISIONSIEVE_BIN_DIR
 } elseif ($env:VISUAL_EVIDENCE_GATEWAY_BIN_DIR) {
