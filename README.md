@@ -1,20 +1,25 @@
 # Visual Evidence Gateway
 
-Visual Evidence Gateway lets DeepSeek, OpenCode, Pi, and other text-first agents keep control of a task while Luna handles the screenshots.
+[![CI](https://github.com/scy7796/visual-evidence-gateway/actions/workflows/ci.yml/badge.svg)](https://github.com/scy7796/visual-evidence-gateway/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/scy7796/visual-evidence-gateway)](https://github.com/scy7796/visual-evidence-gateway/releases)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-It runs locally as a read-only MCP server and exposes one tool:
+Keep DeepSeek, OpenCode, Pi, or another text-first agent in charge of the task. When it hits a screenshot, send only the image question to Luna through one read-only MCP tool.
 
 ```text
-vision.inspect(paths, query, mode="auto", rigor="normal")
+vision.inspect(
+  paths=["./terminal.png"],
+  query="What exception is shown, and where does the stack trace first enter project code?"
+)
 ```
 
-The default route uses your existing Codex ChatGPT login and pins `gpt-5.6-luna`. The gateway does not keep an API key, and it will not switch to an API-billed route when Luna is unavailable.
+The default route reuses your Codex ChatGPT login and pins `gpt-5.6-luna`. The gateway reads approved image files, makes private copies for the request, checks the returned schema and model identity, then sends compact evidence back to the host agent.
 
-A request contains one to four approved image paths and a focused question. The gateway makes a private copy of each image, asks Luna for a structured answer, checks the model identity and response schema, and returns only the evidence the host needs.
+If Luna is unavailable, the call fails. It does not silently switch to another model or an API-billed route.
 
-## A small same-machine comparison
+## Six fixtures: 6/6 expected fields, 62-character median reply
 
-Six synthetic image tasks were run through native Codex image attachment and the gateway with the same questions.
+The same six synthetic image tasks were sent through native Codex image attachment and Visual Evidence Gateway.
 
 | Result | Native Codex attachment | Visual Evidence Gateway |
 |---|---:|---:|
@@ -23,11 +28,7 @@ Six synthetic image tasks were run through native Codex image attachment and the
 | Median returned text | 602 characters | 62 characters |
 | Median end-to-end time | 16.6 s | 20.2 s |
 
-The gateway was slower. It returned roughly one tenth as much text and kept every expected field in this fixture set. The comparison only covers six synthetic cases on one machine, so it is not a general vision leaderboard. The test notes and limits are recorded in [`FINAL_RELEASE_DECISION.md`](FINAL_RELEASE_DECISION.md).
-
-This is a community project, not an official OpenAI product. Luna access depends on the account, region, workspace, and client version.
-
-[Architecture](docs/ARCHITECTURE.md) · [Security model](docs/SECURITY_MODEL.md) · [Releases](https://github.com/scy7796/visual-evidence-gateway/releases)
+On these fixtures, the gateway returned about one tenth as much text without dropping an expected field. It was slower. This is a six-case same-machine comparison, not a general accuracy claim. The prompts, outputs, and limits are recorded in [`comparison.md`](pre_release_validation/results/comparison/comparison.md).
 
 ## Quick install
 
@@ -74,11 +75,11 @@ You can also download the binary and checksum file from [Releases](https://githu
 
 ## Where it helps
 
-This project is meant for long tasks where a text-first agent does the planning and coding, but occasionally needs to read a terminal screenshot, inspect a UI state, understand a chart, follow a diagram, or compare two images.
+This project is for long tasks where a text-first agent handles planning and code but occasionally needs to read a terminal screenshot, inspect a UI state, understand a chart, follow a diagram, or compare two images.
 
-The host sends a specific question instead of its entire conversation. The reply contains a short answer, image-indexed evidence, relevant text, and any uncertainty. Full OCR output and backend traces stay out of the host conversation by default.
+The host sends a focused question instead of its entire conversation. The reply contains a short answer, image-indexed evidence, relevant text, and any uncertainty. Full OCR output and backend traces stay out of the host conversation by default.
 
-If Codex is already the main agent and you only need to inspect one image, native image attachment is simpler. OCR is usually faster for clean text when layout and visual relationships do not matter. This server does not control a mouse, keyboard, browser, video stream, or live desktop.
+Native image attachment is simpler when Codex is already the main agent and you only need to inspect one image. OCR is usually faster for clean text when layout and visual relationships do not matter. This server does not control a mouse, keyboard, browser, video stream, or live desktop.
 
 ## What happens to an image
 
@@ -215,6 +216,8 @@ codex mcp list
 - Luna access and latency depend on the account and current service conditions.
 - The default backend needs a network connection.
 - This project is not intended for medical imaging, industrial inspection, or precision measurement.
+
+This is a community project, not an official OpenAI product.
 
 ## Upgrade and uninstall
 
