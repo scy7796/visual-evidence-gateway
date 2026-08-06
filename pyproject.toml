@@ -3,15 +3,23 @@ requires = ["setuptools>=75", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "visual-evidence-gateway"
-version = "0.5.0"
-description = "Give text-first AI agents secure, minimal-context vision through one MCP tool."
+name = "visionsieve-mcp"
+version = "1.0.0"
+description = "High-signal, minimal-context image evidence for text-first AI agents through one MCP tool."
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
 license-files = ["LICENSE"]
-authors = [{ name = "Visual Evidence Gateway contributors" }]
-keywords = ["mcp", "vision", "ocr", "model-context-protocol", "agent-tools"]
+authors = [{ name = "VisionSieve MCP contributors" }]
+keywords = [
+  "mcp",
+  "vision-mcp",
+  "minimal-context",
+  "context-engineering",
+  "visual-evidence",
+  "structured-output",
+  "agent-tools",
+]
 classifiers = [
   "Development Status :: 4 - Beta",
   "Intended Audience :: Developers",
@@ -39,6 +47,14 @@ dev = [
 ]
 
 [project.scripts]
+visionsieve = "visionsieve_mcp.cli:main"
+visionsieve-mcp = "visionsieve_mcp.server:main"
+visionsieve-healthcheck = "visionsieve_mcp.healthcheck:main"
+visionsieve-probe = "visionsieve_mcp.probe:main"
+visionsieve-setup = "visionsieve_mcp.setup_cli:main"
+
+# Compatibility aliases retained for upgrades from 0.5.x. New documentation,
+# installers, MCP registrations, and release assets use the VisionSieve names.
 visual-evidence-gateway = "visual_evidence_gateway.cli:main"
 visual-evidence-gateway-mcp = "visual_evidence_gateway.server:main"
 visual-evidence-gateway-healthcheck = "visual_evidence_gateway.healthcheck:main"
