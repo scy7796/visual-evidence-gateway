@@ -1,7 +1,7 @@
 # VisionSieve MCP
 
-[![CI](https://github.com/scy7796/visual-evidence-gateway/actions/workflows/ci.yml/badge.svg)](https://github.com/scy7796/visual-evidence-gateway/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/scy7796/visual-evidence-gateway)](https://github.com/scy7796/visual-evidence-gateway/releases)
+[![CI](https://github.com/scy7796/visionsieve-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/scy7796/visionsieve-mcp/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/scy7796/visionsieve-mcp)](https://github.com/scy7796/visionsieve-mcp/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 High-signal image evidence for text-first agents.
@@ -45,13 +45,13 @@ codex
 Windows PowerShell:
 
 ```powershell
-irm https://raw.githubusercontent.com/scy7796/visual-evidence-gateway/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/scy7796/visionsieve-mcp/main/install.ps1 | iex
 ```
 
 macOS or Linux:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/scy7796/visual-evidence-gateway/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/scy7796/visionsieve-mcp/main/install.sh | sh
 ```
 
 The installer downloads the standalone binary for the current platform, verifies its SHA-256 hash, checks the Codex login, registers the `visionsieve` MCP server, and runs one image probe. Python, pip, and a virtual environment are not required.
@@ -59,16 +59,16 @@ The installer downloads the standalone binary for the current platform, verifies
 Skip the image probe during setup:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/scy7796/visual-evidence-gateway/main/install.sh | sh -s -- --skip-probe
+curl -fsSL https://raw.githubusercontent.com/scy7796/visionsieve-mcp/main/install.sh | sh -s -- --skip-probe
 ```
 
 ```powershell
-& ([scriptblock]::Create((irm https://raw.githubusercontent.com/scy7796/visual-evidence-gateway/main/install.ps1))) -SkipProbe
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/scy7796/visionsieve-mcp/main/install.ps1))) -SkipProbe
 ```
 
 Restart the MCP host after installation.
 
-To avoid piping a remote script into a shell, download the binary and `visionsieve-SHA256SUMS.txt` from [Releases](https://github.com/scy7796/visual-evidence-gateway/releases), verify the hash, and run:
+To avoid piping a remote script into a shell, download the binary and `visionsieve-SHA256SUMS.txt` from [Releases](https://github.com/scy7796/visionsieve-mcp/releases), verify the hash, and run:
 
 ```bash
 ./visionsieve setup
