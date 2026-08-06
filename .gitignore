@@ -22,3 +22,4 @@ vision-probe*.png
 .DS_Store
 Thumbs.db
 pre_release_validation/results*/
+*.spec
