@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import os
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 from typing import Optional
@@ -106,7 +107,7 @@ def main(argv: Optional[list[str]] = None) -> int:
         legacy._ensure_login(codex, non_interactive=args.non_interactive)
         if not args.no_register:
             _register(codex, config_path)
-    except (OSError, RuntimeError) as exc:
+    except (OSError, RuntimeError, subprocess.SubprocessError) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 1
 
