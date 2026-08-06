@@ -1,39 +1,38 @@
-# Launch post
+# Launch post (Show HN)
 
-I use text-first agents for most coding work, but screenshots are still awkward. Switching the whole task to a multimodal agent works, though it also moves the planning, code, and long conversation to a different model.
+Suggested title:
 
-Visual Evidence Gateway keeps the main task where it is. It adds one local MCP tool:
+> Show HN: VisionSieve, an MCP server that cuts visual context ~10x
 
-```text
-vision.inspect(paths, query)
-```
+I run most of my coding work in a text-first agent. Screenshots still break that workflow. Attaching an image natively works, but the model's description of it lands in the main conversation, and on a long task that text adds up.
 
-The host sends an approved image path and a focused question. The gateway checks the path, copies the image into a private request directory, calls `gpt-5.6-luna` through the local Codex CLI, and returns a short answer with image-indexed evidence.
+VisionSieve is a local MCP server that does the image step outside the main context. You give it one to four image paths and a question. It copies the images into a private directory, sends a focused prompt to a pinned model through the local Codex CLI, checks the response against a schema, and returns a short evidence packet with the answer, image-indexed evidence, relevant text, and uncertainty.
 
-The default route uses the existing ChatGPT login in Codex. It does not store API keys, and it does not switch to an API-billed model when Luna is unavailable.
+I compared it with native Codex attachment on the same machine, six synthetic image tasks:
 
-I built the extra layer because a thin image wrapper was not enough for the workflow I wanted. The gateway limits readable paths, rejects links and common credential locations, runs the backend without shell or browser tools, checks the model identity and response schema, and can retry with crops or tiles when small details are hard to read.
+| Result | Native | VisionSieve |
+|---|---:|---:|
+| Tasks completed | 6/6 | 6/6 |
+| All expected fields present | 4/6 | 6/6 |
+| Median visual text returned to the host | 602 chars | 62 chars |
+| Median end-to-end time | 16.6 s | 20.2 s |
 
-Install it with an existing Codex CLI and ChatGPT login.
+Slower at the median, about 1/10 the text. Six fixtures on one machine; this is not a general benchmark.
 
-Windows:
+Native attachment is still the simpler choice when Codex is already the main agent and the task involves one image. The sieve is for workflows where the main agent stays text-first (DeepSeek, OpenCode, Pi, or Codex on a long task) and only needs visual evidence for part of it.
+
+Most of the work went into the security model. VisionSieve reads only paths inside an allowlist, rejects symlinks and reparse points, skips credential and config directories, and stages a private copy of each image. The backend child process is read-only, with shell, browser, subagent, and web tools disabled. Output is checked for model identity and schema compliance, and text inside the image is treated as content to inspect, not as instructions. The pinned Luna route is the only default. When it is unavailable, the call fails instead of switching to an API-billed model.
+
+Install with an existing Codex CLI and ChatGPT login:
 
 ```powershell
-irm https://raw.githubusercontent.com/scy7796/visual-evidence-gateway/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/scy7796/visionsieve-mcp/main/install.ps1 | iex
 ```
-
-macOS or Linux:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/scy7796/visual-evidence-gateway/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/scy7796/visionsieve-mcp/main/install.sh | sh
 ```
 
-Repository:
+Repo: https://github.com/scy7796/visionsieve-mcp
 
-https://github.com/scy7796/visual-evidence-gateway
-
-Direct image attachment is still the simpler choice when Codex is already the main agent. This project is for workflows where a text-first agent stays in control and only needs visual evidence for a small part of the task.
-
-Current limits are documented in the README. Windows ARM64 has no prebuilt binary, release binaries are not code-signed, and Luna access depends on the account and client.
-
-If it is useful in your setup, a Star helps other people find it.
+Limits: no Windows ARM64 binary, release binaries not code-signed, Luna depends on the account and service conditions, network required. No mouse, keyboard, browser, video, or live-screen control. Not for medical imaging, industrial inspection, or precision measurement. Community project, not an official OpenAI product.
