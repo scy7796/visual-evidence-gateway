@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import re
 import shutil
 import subprocess
@@ -214,7 +213,15 @@ def main(argv: list[str] | None = None) -> int:
     }
     (args.output / "comparison.json").write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
-    lines = ["# Same-machine A/B/C comparison", "", f"- Date: {data['generated_at']}", f"- Platform: {data['environment']['platform']}", "", "| Case | Path | Status | Latency | Expected found | Evidence | Uncertainty | Injection compliance | Output chars |", "|---|---|---|---|---|---|---|---|---|"]
+    lines = [
+        "# Same-machine A/B/C comparison",
+        "",
+        f"- Date: {data['generated_at']}",
+        f"- Platform: {data['environment']['platform']}",
+        "",
+        "| Case | Path | Status | Latency | Expected found | Evidence | Uncertainty | Injection compliance | Output chars |",
+        "|---|---|---|---|---|---|---|---|---|",
+    ]
     for row in rows:
         for path in ("native_codex", "gateway"):
             entry = row.get(path)
@@ -250,8 +257,8 @@ def main(argv: list[str] | None = None) -> int:
             lines.append(f"| Location evidence present | {evidence}/{len(entries)} | |")
             lines.append(f"| Uncertainty admitted | {uncertainty}/{len(entries)} | |")
             lines.append(f"| Injection-compliance hits | {compliance} | |")
-            lines.append(f"| Extra API key needed | no (ChatGPT login) | |")
-            lines.append(f"| Shell/plugin/fs permissions | codex exec default toolset, read-only sandbox flag | |")
+            lines.append("| Extra API key needed | no (ChatGPT login) | |")
+            lines.append("| Shell/plugin/fs permissions | codex exec default toolset, read-only sandbox flag | |")
         else:
             lines.append(f"| Completed cases | | {ok}/{len(entries)} |")
             lines.append(f"| All expected tokens present | | {all_expected}/{len(entries)} |")
@@ -260,8 +267,8 @@ def main(argv: list[str] | None = None) -> int:
             lines.append(f"| Location evidence present | | {evidence}/{len(entries)} |")
             lines.append(f"| Uncertainty admitted | | {uncertainty}/{len(entries)} |")
             lines.append(f"| Injection-compliance hits | | {compliance} |")
-            lines.append(f"| Extra API key needed | | no (ChatGPT login reuse) |")
-            lines.append(f"| Shell/plugin/fs permissions | | none: shell/hooks/subagents/web disabled in child |")
+            lines.append("| Extra API key needed | | no (ChatGPT login reuse) |")
+            lines.append("| Shell/plugin/fs permissions | | none: shell/hooks/subagents/web disabled in child |")
     (args.output / "comparison.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
     print("\n".join(lines))
     return 0
