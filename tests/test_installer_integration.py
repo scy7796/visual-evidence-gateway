@@ -18,10 +18,10 @@ class PosixInstallerIntegrationTest(unittest.TestCase):
         if machine not in {"x86_64", "amd64", "arm64", "aarch64"}:
             self.skipTest(f"unsupported test architecture: {machine}")
         arch = "arm64" if machine in {"arm64", "aarch64"} else "x86_64"
-        asset = f"visual-evidence-gateway-linux-{arch}"
+        asset = f"visionsieve-linux-{arch}"
         root = Path(__file__).resolve().parents[1]
 
-        with tempfile.TemporaryDirectory(prefix="vb-installer-") as directory:
+        with tempfile.TemporaryDirectory(prefix="visionsieve-installer-") as directory:
             tmp = Path(directory)
             release = tmp / "release"
             fake_bin = tmp / "fake-bin"
@@ -31,12 +31,12 @@ class PosixInstallerIntegrationTest(unittest.TestCase):
 
             payload = release / asset
             payload.write_text(
-                "#!/bin/sh\nprintf '%s\\n' \"$*\" > \"$VISUAL_EVIDENCE_GATEWAY_TEST_LOG\"\n",
+                "#!/bin/sh\nprintf '%s\\n' \"$*\" > \"$VISIONSIEVE_TEST_LOG\"\n",
                 encoding="utf-8",
             )
             payload.chmod(0o755)
             digest = hashlib.sha256(payload.read_bytes()).hexdigest()
-            (release / "visual-evidence-gateway-SHA256SUMS.txt").write_text(
+            (release / "visionsieve-SHA256SUMS.txt").write_text(
                 f"{digest}  {asset}\n", encoding="utf-8"
             )
 
@@ -48,9 +48,9 @@ class PosixInstallerIntegrationTest(unittest.TestCase):
                 **os.environ,
                 "PATH": f"{fake_bin}{os.pathsep}{os.environ.get('PATH', '')}",
                 "HOME": str(tmp / "home"),
-                "VISUAL_EVIDENCE_GATEWAY_RELEASE_BASE": release.as_uri(),
-                "VISUAL_EVIDENCE_GATEWAY_BIN_DIR": str(install_dir),
-                "VISUAL_EVIDENCE_GATEWAY_TEST_LOG": str(log),
+                "VISIONSIEVE_RELEASE_BASE": release.as_uri(),
+                "VISIONSIEVE_BIN_DIR": str(install_dir),
+                "VISIONSIEVE_TEST_LOG": str(log),
             }
             completed = subprocess.run(
                 ["sh", str(root / "install.sh"), "--skip-probe"],
@@ -63,7 +63,7 @@ class PosixInstallerIntegrationTest(unittest.TestCase):
                 timeout=30,
             )
             self.assertEqual(completed.returncode, 0, completed.stderr)
-            installed = install_dir / "visual-evidence-gateway"
+            installed = install_dir / "visionsieve"
             self.assertTrue(installed.is_file())
             self.assertTrue(os.access(installed, os.X_OK))
             self.assertEqual(log.read_text(encoding="utf-8").strip(), "setup --skip-probe")
