@@ -1,10 +1,15 @@
-# Visual Evidence Gateway
+# VisionSieve MCP
 
 [![CI](https://github.com/scy7796/visual-evidence-gateway/actions/workflows/ci.yml/badge.svg)](https://github.com/scy7796/visual-evidence-gateway/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/scy7796/visual-evidence-gateway)](https://github.com/scy7796/visual-evidence-gateway/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-Keep DeepSeek, OpenCode, Pi, or another text-first agent in charge of the task. When it hits a screenshot, send only the image question to Luna through one read-only MCP tool.
+High-signal image evidence for text-first agents.
+
+Keep DeepSeek, OpenCode, Pi, or another text-first agent in charge. When the task depends on pixels, VisionSieve sends one focused image question to Luna and returns a small, checked evidence packet.
+
+**About 1/10 the visual text in the host context.**  
+**6/6 expected fields versus 4/6 for native attachment in our six-fixture comparison.**
 
 ```text
 vision.inspect(
@@ -13,26 +18,24 @@ vision.inspect(
 )
 ```
 
-The default route reuses your Codex ChatGPT login and pins `gpt-5.6-luna`. The gateway reads approved image files, makes private copies for the request, checks the returned schema and model identity, then sends compact evidence back to the host agent.
+The default route reuses the local Codex ChatGPT login and pins `gpt-5.6-luna`. If that route is unavailable, the call fails. It does not silently switch models or move onto an API-billed route.
 
-If Luna is unavailable, the call fails. It does not silently switch to another model or an API-billed route.
+## The comparison
 
-## Same task, about 1/10 the visual text in the host context
+The same six synthetic image tasks were sent through native Codex image attachment and VisionSieve on one machine.
 
-The same six synthetic image tasks were sent through native Codex image attachment and Visual Evidence Gateway.
-
-| Result | Native Codex attachment | Visual Evidence Gateway |
+| Result | Native Codex attachment | VisionSieve |
 |---|---:|---:|
 | Tasks completed | 6/6 | 6/6 |
 | All expected fields present | 4/6 | 6/6 |
 | Median visual text returned to the host | 602 characters | 62 characters, about 1/10 |
 | Median end-to-end time | 16.6 s | 20.2 s |
 
-In this run, the gateway took 3.6 seconds longer at the median and sent about 90% less visual text into the host context. It also kept every expected field in the six fixtures. These are same-machine results from a small synthetic set, not a general vision benchmark. The prompts, outputs, and limits are recorded in [`comparison.md`](pre_release_validation/results/comparison/comparison.md).
+VisionSieve took 3.6 seconds longer at the median and sent about 90% less visual text into the host context. It kept every expected field in this fixture set. This is a small same-machine comparison, not a general accuracy or speed leaderboard. The prompts, outputs, and limits are in [`comparison.md`](pre_release_validation/results/comparison/comparison.md).
 
-## Quick install
+## Install
 
-Install the Codex CLI and sign in with ChatGPT:
+First install Codex and sign in with ChatGPT:
 
 ```bash
 npm install -g @openai/codex
@@ -51,82 +54,70 @@ macOS or Linux:
 curl -fsSL https://raw.githubusercontent.com/scy7796/visual-evidence-gateway/main/install.sh | sh
 ```
 
-The installer downloads the executable for your platform, checks the published SHA-256 hash, registers the MCP server with an absolute path, checks the Codex login, and runs a small image request. The gateway itself does not need Python, pip, a virtual environment, or a separate Node runtime.
+The installer downloads the standalone binary for the current platform, verifies its SHA-256 hash, checks the Codex login, registers the `visionsieve` MCP server, and runs one image probe. Python, pip, and a virtual environment are not required.
 
-To install without making the image request:
+Skip the image probe during setup:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/scy7796/visual-evidence-gateway/main/install.sh | sh -s -- --skip-probe
 ```
 
-Windows:
-
 ```powershell
 & ([scriptblock]::Create((irm https://raw.githubusercontent.com/scy7796/visual-evidence-gateway/main/install.ps1))) -SkipProbe
 ```
 
-Restart the MCP host after setup so it can discover the server.
+Restart the MCP host after installation.
 
-You can also download the binary and checksum file from [Releases](https://github.com/scy7796/visual-evidence-gateway/releases), verify the hash yourself, and run:
+To avoid piping a remote script into a shell, download the binary and `visionsieve-SHA256SUMS.txt` from [Releases](https://github.com/scy7796/visual-evidence-gateway/releases), verify the hash, and run:
 
 ```bash
-./visual-evidence-gateway setup
+./visionsieve setup
 ```
 
-## Where it helps
+## Why use a sieve instead of attaching the image directly?
 
-This project is for long tasks where a text-first agent handles planning and code but occasionally needs to read a terminal screenshot, inspect a UI state, understand a chart, follow a diagram, or compare two images.
+Direct attachment gives the multimodal model the image and usually lets it decide how much visual narration to return. That is convenient for isolated image questions. It is less convenient inside a long coding or research task, where a large OCR dump or broad visual description becomes part of the main agent's context.
 
-The host sends a focused question instead of its entire conversation. The reply contains a short answer, image-indexed evidence, relevant text, and any uncertainty. Full OCR output and backend traces stay out of the host conversation by default.
+VisionSieve keeps the handoff narrow:
 
-Native image attachment is simpler when Codex is already the main agent and you only need to inspect one image. OCR is usually faster for clean text when layout and visual relationships do not matter. This server does not control a mouse, keyboard, browser, video stream, or live desktop.
+```text
+main agent keeps the task history
+            |
+            | focused image question
+            v
+        vision.inspect
+            |
+            | approved image bytes only
+            v
+      gpt-5.6-luna
+            |
+            | checked compact evidence
+            v
+main agent continues the original task
+```
+
+The host sends one to four approved image paths and a specific question. VisionSieve returns a short answer, image-indexed evidence, relevant text, and uncertainty. Full OCR output and backend traces stay out of the host conversation by default.
+
+Native attachment is still simpler when Codex is already the main agent and the task only involves one image. OCR is usually faster for clean text when layout and visual relationships do not matter.
 
 ## What happens to an image
 
-```text
-text-first agent
-    |
-    | vision.inspect
-    v
-path authorization and stable file read
-    v
-bounded copy in a private request directory
-    v
-Codex CLI with gpt-5.6-luna
-    v
-model identity, schema, and semantic checks
-    v
-optional crop or tile retry
-    v
-compact evidence returned to the host
-```
+1. VisionSieve authorizes the path and performs a stable file read.
+2. It copies bounded image bytes into a private request directory.
+3. Codex invokes the pinned Luna model in a read-only child process.
+4. The result is checked for model identity, schema compliance, evidence references, and task redirection from text inside the image.
+5. Weak evidence can trigger a bounded crop or tile retry.
+6. Only the compact result is returned to the host.
 
-The gateway reads only approved image files. It copies them into a private request directory before calling the backend, so the backend never receives an arbitrary path from the host.
-
-If the first answer does not contain enough evidence, the router can retry with a crop or a set of tiles. The final response must match the result schema and can only refer to images that were included in the request.
+The backend never receives an arbitrary host path. It receives the private request copy.
 
 ## File and model controls
 
-The current working directory is the default allow root. The gateway rejects credential and configuration directories, symbolic links, Windows junctions and reparse points, UNC and verbatim paths, NTFS alternate data streams, unsupported files, and images outside the configured size and pixel limits.
+The current working directory is the default allow root. VisionSieve rejects credential and configuration directories, symbolic links, Windows junctions and reparse points, UNC and verbatim paths, NTFS alternate data streams, unsupported files, and images outside the configured byte and pixel limits.
 
 The Codex child process runs read-only. Shell access, subagents, hooks, remote plugins, automatic dependency installation, and web search are disabled. ChatGPT mode removes API-key and alternate-endpoint variables from the child environment.
 
-Text inside an image is treated as content to inspect. The gateway checks the backend response for execution claims and other signs that the image tried to redirect the task.
-
-These controls narrow the available attack surface, but they are not a complete isolation boundary. Use a separate user account, container, or virtual machine for highly sensitive images.
-
-## Cache behavior
-
-The default cache keeps compact evidence. It does not keep raw backend responses, full OCR text, or local cache paths:
-
-```yaml
-cache:
-  store_raw: false
-  store_full_text: false
-  expose_local_refs: false
-```
-
-A cache hit still repeats path authorization, stable file reading, and image-byte checks. It skips another backend call only when the image, question, and relevant settings are unchanged.
+Text inside an image is treated as content to inspect, not as an instruction to the host. These controls reduce the available attack surface, but they are not a complete isolation boundary. Use a separate user account, container, or virtual machine for highly sensitive images.
 
 ## Tool reference
 
@@ -143,9 +134,7 @@ vision.inspect(
 
 `query` should ask for the fact that must be confirmed from the image. Keep project history and unrelated task context in the host conversation.
 
-`mode` selects the visual task. In `auto` mode, the router uses the image count and the query to choose a path.
-
-`normal` uses the primary backend and allows crop or tile retries when the evidence is weak. `critical` can use an independently configured verifier. `cheap` stays on the primary route unless the operator has configured another path.
+`normal` uses the primary backend and permits evidence-driven crop or tile retries. `critical` can use an independently configured verifier. `cheap` stays on the primary route unless another path has been explicitly configured.
 
 ## Default configuration
 
@@ -175,65 +164,87 @@ cache:
   expose_local_refs: false
 ```
 
-See [`examples/config.yaml`](examples/config.yaml) for a complete example. Remote endpoints, API keys, verifier models, and fallback models require explicit configuration.
+See [`examples/config.yaml`](examples/config.yaml) for the complete configuration surface. Remote endpoints, API keys, verifier models, and fallback models require explicit operator configuration.
 
 ## Commands
 
 ```text
-visual-evidence-gateway setup
-visual-evidence-gateway serve
-visual-evidence-gateway healthcheck
-visual-evidence-gateway probe
+visionsieve setup
+visionsieve serve
+visionsieve healthcheck
+visionsieve probe
 ```
 
-Manual MCP registration:
+Manual registration:
 
 ```bash
-codex mcp add visual-evidence-gateway -- visual-evidence-gateway serve
+codex mcp add visionsieve -- visionsieve serve
 ```
 
 Registration with a specific configuration file:
 
 ```bash
-codex mcp add visual-evidence-gateway \
-  --env VISUAL_EVIDENCE_GATEWAY_CONFIG=/absolute/path/to/config.yaml \
-  -- visual-evidence-gateway serve
+codex mcp add visionsieve \
+  --env VISIONSIEVE_CONFIG=/absolute/path/to/config.yaml \
+  -- visionsieve serve
 ```
 
 Diagnostics:
 
 ```bash
-visual-evidence-gateway healthcheck --check-connectivity --json
-visual-evidence-gateway probe --backend primary --json
+visionsieve healthcheck --check-connectivity --json
+visionsieve probe --backend primary --json
 codex mcp list
+```
+
+## Cache behavior
+
+The default cache stores compact evidence, not raw backend responses, full OCR text, or local cache paths. A cache hit repeats path authorization and image-byte checks, then skips the backend call only when the image, question, and relevant settings are unchanged.
+
+## Upgrading from Visual Evidence Gateway 0.5
+
+Version 1.0 changes the public distribution, executable, and MCP registration to VisionSieve:
+
+```text
+Python distribution: visionsieve-mcp
+CLI:                 visionsieve
+MCP registration:    visionsieve
+config variable:     VISIONSIEVE_CONFIG
+```
+
+Running `visionsieve setup` removes the old `visual-evidence-gateway` MCP registration before adding the new one. The old Python import package and old console commands remain available in 1.0 as compatibility aliases; new integrations should use the VisionSieve names.
+
+The v1 default config directory is:
+
+- Windows: `%APPDATA%\visionsieve`
+- macOS: `~/Library/Application Support/visionsieve`
+- Linux: `~/.config/visionsieve`
+
+Existing 0.5 configuration can be passed explicitly:
+
+```bash
+visionsieve setup --config /path/to/old/config.yaml
 ```
 
 ## Known limits
 
 - Codex Desktop may need a full restart before it discovers the server.
-- Windows ARM64 does not have a prebuilt binary.
-- Release binaries are not code-signed. The installers rely on HTTPS and the published SHA-256 manifest.
+- Windows ARM64 has no prebuilt binary.
+- Release binaries are not code-signed.
 - Luna access and latency depend on the account and current service conditions.
 - The default backend needs a network connection.
-- This project is not intended for medical imaging, industrial inspection, or precision measurement.
+- VisionSieve does not provide mouse, keyboard, browser, video, or live-screen control.
+- It is not intended for medical imaging, industrial inspection, or precision measurement.
 
-This is a community project, not an official OpenAI product.
+VisionSieve MCP is a community project, not an official OpenAI product.
 
-## Upgrade and uninstall
-
-Run the installer again to upgrade.
-
-Remove the MCP registration with:
+## Uninstall
 
 ```bash
-codex mcp remove visual-evidence-gateway
+codex mcp remove visionsieve
 ```
 
-Then remove the installation and configuration directories:
-
-- Windows: `%LOCALAPPDATA%\VisualEvidenceGateway\bin` and `%APPDATA%\visual-evidence-gateway`
-- macOS: `~/Library/Application Support/visual-evidence-gateway`
-- Linux: `~/.local/share/visual-evidence-gateway` and `~/.config/visual-evidence-gateway`
+Remove the installed `visionsieve` binary and its configuration directory. Users upgrading from 0.5 may also remove the old `visual-evidence-gateway` binary and configuration directory after confirming the v1 setup works.
 
 ## Development
 
@@ -246,10 +257,12 @@ ruff check .
 pytest
 python -m compileall -q src tests scripts
 python scripts/audit_release.py
+python -m build
+python scripts/verify_artifacts.py
 ```
 
 ## License
 
 MIT
 
-If this fits your workflow, a Star helps other people find it.
+If VisionSieve earns a place in your workflow, a Star helps the next person find it.
