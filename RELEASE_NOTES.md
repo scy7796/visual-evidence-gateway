@@ -1,49 +1,37 @@
-# Visual Evidence Gateway v0.5.0
+# VisionSieve MCP v1.0.0
 
-Visual Evidence Gateway is a local, read-only MCP server for text agents. It exposes `vision.inspect` and uses the local Codex CLI with explicit `gpt-5.6-luna` and ChatGPT authentication by default.
+VisionSieve gives text-first agents a narrow visual handoff: one focused image question goes to Luna, and compact checked evidence comes back to the host.
 
-The default configuration stores no API key. Verifier and fallback backends are off. If the configured model or authentication route is unavailable, the request fails.
+The default route uses the local Codex CLI, a ChatGPT login, and explicit `gpt-5.6-luna`. Verifier and fallback routes remain off unless the operator configures them. If the expected model or login route is unavailable, the request fails instead of switching to another model or an API-billed path.
 
-## Changes from v0.4.1
+## New public identity
 
-The project was renamed from `vision-bridge-mcp` because another project already used that name.
+Version 1.0 introduces the VisionSieve name across the public interface:
 
-This release also:
+- Python distribution: `visionsieve-mcp`
+- CLI: `visionsieve`
+- MCP registration: `visionsieve`
+- configuration variable: `VISIONSIEVE_CONFIG`
+- standalone binaries and checksum manifest: `visionsieve-*`
 
-- checks the model identity reported by the Codex CLI transcript;
-- removes API-key, base-URL, organization, project, Anthropic, Gemini, and Codex API-key variables from ChatGPT-mode child processes;
-- masks local paths in errors and refusals;
-- rejects Windows junction and reparse paths without crashing;
-- requires installer SHA-256 verification and rolls back the binary when setup fails;
-- adds release checks for strict JSON Schema, cache hits without backend calls, fresh-cache runs, and path-security negatives;
-- fixes Windows wheel installation and a missing PyInstaller dependency in CI.
+The MCP tool remains `vision.inspect`.
 
-## Validation
+The hardened runtime core stays compatible with 0.5 installations. Old `visual-evidence-gateway` console commands and the `visual_evidence_gateway` Python package remain available in 1.0 as migration aliases. Running `visionsieve setup` removes the old MCP registration before adding the new one.
 
-The live Windows 11 x64 validation covered ChatGPT authentication, ten real Luna probes, six image fixture types, path-security negatives, cache behavior, strict backend Schema, the standalone binary, and installer rollback.
+## Same-machine comparison
 
-The same-machine image comparison produced these results:
+Six synthetic image tasks were run through native Codex image attachment and VisionSieve with the same questions.
 
-| Metric | Native Codex attachment | Gateway |
+| Metric | Native Codex attachment | VisionSieve |
 |---|---:|---:|
 | Tasks completed | 6/6 | 6/6 |
 | Expected fields fully present | 4/6 | 6/6 |
+| Median visual text returned to the host | 602 characters | 62 characters |
 | Median end-to-end time | 16.6 s | 20.2 s |
-| Median returned length | 602 characters | 62 characters |
 
-These six synthetic fixtures do not establish general accuracy or speed. The gateway was slower on the validation machine.
+On this fixture set, VisionSieve returned about one tenth as much visual text and kept every expected field. It was 3.6 seconds slower at the median. These six synthetic cases do not establish general accuracy, context-token, or speed results.
 
-Automated checks reported 197 passed tests and 9 platform-gated skips. Ruff, compileall, source audit, wheel and sdist builds, twine checks, clean installs, and source-ZIP retesting passed.
-
-MCP protocol interoperability was tested over stdio with the official MCP SDK client. Codex Desktop has not been manually verified as the host. The validation Windows machine also reproduced a Codex CLI 0.146.1 stdio MCP call failure against a trivial server.
-
-## Release assets
-
-The Release contains binaries for Windows x86_64, Linux x86_64, Linux ARM64, macOS x86_64, and macOS ARM64, along with the wheel, sdist, source archive, and SHA-256 manifest.
-
-Windows ARM64 has no prebuilt binary. Release binaries are not code-signed.
-
-## Install
+## Installation
 
 Prerequisite: Codex CLI signed in with ChatGPT.
 
@@ -59,4 +47,23 @@ macOS or Linux:
 curl -fsSL https://raw.githubusercontent.com/scy7796/visual-evidence-gateway/main/install.sh | sh
 ```
 
-See [`FINAL_RELEASE_DECISION.md`](FINAL_RELEASE_DECISION.md) for the complete validation record and current boundaries.
+The installer downloads a platform binary, requires a matching entry in `visionsieve-SHA256SUMS.txt`, registers the MCP server with an absolute command path, checks the ChatGPT login, and runs a small image probe. Setup failure rolls the new binary back.
+
+## Release assets
+
+The release workflow builds:
+
+- Windows x86_64
+- Linux x86_64 and ARM64
+- macOS x86_64 and ARM64
+- wheel and sdist
+- source ZIP
+- SHA-256 manifest
+
+Windows ARM64 has no prebuilt binary. Release binaries are not code-signed.
+
+## Boundaries
+
+MCP protocol interoperability was validated over stdio with the official MCP SDK client in the 0.5 release process. Codex Desktop host discovery can vary by client version and may require a complete restart. Luna availability and latency depend on the account, region, workspace, and service conditions.
+
+VisionSieve MCP is a community project, not an official OpenAI product.
